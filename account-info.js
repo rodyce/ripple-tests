@@ -1,25 +1,39 @@
 'use strict';
 const RippleAPI = require('ripple-lib').RippleAPI;
 
-const ServerHost = "ws://184.105.216.181:9090";
+const ServerHost = "wss://s.altnet.rippletest.net/";
 
 const api = new RippleAPI({
-  server: ServerHost // Blocksize Internal server.
+  server: ServerHost
 });
-api.connect().then(() => {
-  /* begin custom code ------------------------------------ */
-  const myAddress = 'rBGH91jmPeon3pVrijiDJkAfzHFYkcWfjx';
 
-  console.log('getting account info for', myAddress);
-  return api.getAccountInfo(myAddress);
 
-}).then(info => {
-  console.log(info);
-  console.log('getAccountInfo done');
+async function main() {
+  const myAddress = process.argv[2];
 
-  /* end custom code -------------------------------------- */
-}).then(() => {
-  return api.disconnect();
-}).then(() => {
-  console.log('done and disconnected.');
-}).catch(console.error);
+  await api.connect();
+
+  try {
+    console.log('getting account info for', myAddress);
+    const accountInfo = await api.getAccountInfo(myAddress);
+
+    console.log(accountInfo);
+    console.log('getAccountInfo done');
+  } catch (error) {
+    console.log(`EXCEPTION TYPE ${error.message} !!`);
+    if (error.message === 'actNotFound') {
+      console.log(`Account ${myAddress} does not exist`);
+    } else {
+      throw error;
+    }
+  }
+  api.disconnect();
+  console.log('done and disconnected');
+}
+
+if (process.argv.length < 3) {
+  console.error('Bad number of arguments');
+  process.exit(1);
+}
+
+main()
